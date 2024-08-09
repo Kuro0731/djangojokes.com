@@ -47,6 +47,54 @@ class JokeListView(ListView):
     model = Joke
     paginate_by = 10
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        order_fields, order_key, direction = self.get_order_settings()
+
+        context['order'] = order_key
+        context['direction'] = direction
+        
+        # get all but the last order key, which is 'default'
+        context['order_fields'] = list(order_fields.keys())[:-1]
+
+        return context
+    
+    def get_ordering(self):
+        order_fields, order_key, direction = self.get_order_settings()
+        
+        ordering = order_fields[order_key]
+
+        # if direction is 'desc' or is invalid use descending order
+        if direction != 'asc':
+            ordering = '-' + ordering
+
+        return ordering
+
+    def get_order_settings(self):
+        order_fields = self.get_order_fields()
+        default_order_key = order_fields['default_key']
+        order_key = self.request.GET.get('order', default_order_key)
+        direction = self.request.GET.get('direction', 'desc')
+        
+        # If order_key is invalid, use default
+        if order_key not in order_fields:
+            order_key = default_order_key
+
+        return (order_fields, order_key, direction)
+
+    
+    def get_order_fields(self):
+        # Returns a dict mapping friendly names to field names and lookups.
+        return {
+            'joke': 'question',
+            'category': 'category__category',
+            'creator': 'user__username',
+            'created': 'created',
+            'updated': 'updated',
+            'default_key': 'updated'
+        }
+
 
 class JokeUpdateView(SuccessMessageMixin, UserPassesTestMixin, UpdateView):
     model = Joke
@@ -59,29 +107,29 @@ class JokeUpdateView(SuccessMessageMixin, UserPassesTestMixin, UpdateView):
 
 
 def vote(request, slug):
-    user = request.user 
-    joke = Joke.objects.get(slug=slug) 
-    data = json.loads(request.body) 
+    user = request.user # The logged-in user (or AnonymousUser).
+    joke = Joke.objects.get(slug=slug) # The joke instance.
+    data = json.loads(request.body) # Data from the JavaScript.
 
-    
-    vote = data['vote'] 
-    likes = data['likes'] 
-    dislikes = data['dislikes'] 
+    # Set simple variables.
+    vote = data['vote'] # The user's new vote.
+    likes = data['likes'] # The number of likes currently displayed on page.
+    dislikes = data['dislikes'] # The number of dislikes currently displayed.
 
-    if user.is_anonymous: 
+    if user.is_anonymous: # User not logged in. Can't vote.
         msg = 'Sorry, you have to be logged in to vote.'
-    else: 
+    else: # User is logged in.
         if JokeVote.objects.filter(user=user, joke=joke).exists():
-           
+            # User already voted. Get user's past vote:
             joke_vote = JokeVote.objects.get(user=user, joke=joke)
 
-            if joke_vote.vote == vote: 
+            if joke_vote.vote == vote: # User's new vote is the same as old vote.
                 msg = 'Right. You told us already. Geez.'
-            else:
-                joke_vote.vote = vote 
-                joke_vote.save() 
+            else: # User changed vote.
+                joke_vote.vote = vote # Update JokeVote instance.
+                joke_vote.save() # Save.
 
-                
+                # Set data to return to the browser.
                 if vote == -1:
                     likes -= 1
                     dislikes += 1
@@ -90,12 +138,12 @@ def vote(request, slug):
                     likes += 1
                     dislikes -= 1
                     msg = 'Grown on you, has it? OK. Noted.'
-        else: 
-           
+        else: # First time user is voting on this joke.
+            # Create and save new vote.
             joke_vote = JokeVote(user=user, joke=joke, vote=vote)
             joke_vote.save()
 
-          
+            # Set data to return to the browser.
             if vote == -1:
                 dislikes += 1
                 msg = "Sorry you didn't like the joke."
@@ -103,10 +151,10 @@ def vote(request, slug):
                 likes += 1
                 msg = "Yeah, good one, right?"
 
-  
+    # Create object to return to browser.
     response = {
         'msg': msg,
         'likes': likes,
         'dislikes': dislikes
     }
-    return JsonResponse(response) 
+    return JsonResponse(response) # Return object as JSON.
