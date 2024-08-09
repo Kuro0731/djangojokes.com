@@ -57,5 +57,17 @@ class Applicant(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+    @property
+    def num_votes(self):
+        return self.jokevotes.count()
+
+    @property
+    def num_likes(self):
+        return self.jokevotes.filter(vote=1).count()
+
+    @property
+    def num_dislikes(self):
+        return self.jokevotes.filter(vote=-1).count()
+
     def __str__(self):
         return f'{self.first_name} {self.last_name} ({self.job})'
