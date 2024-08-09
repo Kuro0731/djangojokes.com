@@ -9,7 +9,6 @@
 <script src="https://kit.fontawesome.com/f804978a2a.js" crossorigin="anonymous"></script>
 <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}">
 <title>{% block title %}{% endblock %} | Django Jokes</title>
-
 </head>
 <body>
 <header>
@@ -17,8 +16,8 @@
     <a class="navbar-brand" href="{% url 'pages:homepage' %}">
       <img src="{% static 'images/logo.png' %}" alt="Logo" class="img-fluid"/>
     </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse"
-      data-target="#navbarSupportedContent" aria-expanded="false"
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent" aria-expanded="false"
       aria-controls="navbarSupportedContent" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -38,8 +37,7 @@
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" 
-             role="button" data-toggle="dropdown" aria-haspopup="true"
-             aria-expanded="false">
+             role="button" data-bs-toggle="dropdown">
             Me
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -67,7 +65,7 @@
     {% for message in messages %}
     <div class="alert message{{ message.tags }} alert-dismissible" role="alert">
         <strong>{{message}}</strong>
-        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     {% endfor %}
   </ul>
